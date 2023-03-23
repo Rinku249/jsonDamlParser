@@ -1,0 +1,9 @@
+<% if(object["Key"]){ %>type <%= object["id"] %>Key = (<% Object.keys(object["Key"]).forEach( (x,i,arr) =>{ %><%= object["Key"][x] %><% if(arr.length != i+1){%>,<% }%><% }) %>)<% } %>
+template <%= object["id"] %> 
+    with
+        <% Object.keys(object["elements"]).forEach( x =>{ %><%= x %> : <%= object["elements"][x] %>
+        <% }) %><%= object["Signatory"] %> : Party
+        <% if(object["Observer"]){ %><%= object["Observer"] %> : Party <% } %>
+    where
+        signatory <%= object["Signatory"] %>
+        <% if(object["Observer"]){ %>observer <%= object["Observer"] %><% } %>

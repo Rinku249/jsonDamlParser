@@ -1,0 +1,26 @@
+{
+  "name": "jsonparser",
+  "version": "1.0.0",
+  "description": "",
+  "main": "parser.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Rinku249/jsonDamlParser.git"
+  },
+  "type": "module",
+  "author": "Jose Daniel Lopez Hernandez",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Rinku249/jsonDamlParser/issues"
+  },
+  "homepage": "https://github.com/Rinku249/jsonDamlParser#readme",
+  "dependencies": {
+    "argv": "^0.0.3",
+    "ejs": "^3.1.9",
+    "fs": "^0.0.1-security",
+    "process": "^0.11.10"
+  }
+}

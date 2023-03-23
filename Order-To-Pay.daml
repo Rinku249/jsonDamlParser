@@ -1,0 +1,154 @@
+========================== Templates =========================
+
+Template PO
+    with
+        object : Text
+        price : Decimal
+        address : Text
+        supplier : Party
+        client : Party
+    where
+        signatory client
+        observer supplier
+
+Template Request_Carriers
+    with
+        object : Text
+        price : Decimal
+        adress : Text
+        client : Party
+        supplier : Party
+    where
+        signatory supplier
+
+type QuotationKey = (Party,Party)
+Template Quotation
+    with
+        object : Text
+        price : Decimal
+        adress : Text
+        client : Party
+        supplier : Party
+        carrier : Party
+    where
+        signatory supplier
+        observer carrier
+
+        key (supplier, carrier) : QuotationKey
+        maintainer key._1
+
+
+Type QuoteKey = (Party, Party)
+Template Quote
+    with
+        fee : Decimal
+        time : RelTime
+    where
+        signatory supplier
+        observer carrier
+
+        key (supplier, carrier) : QuoteKey
+        maintainer key._1
+
+
+Template Choose_Carrier
+    with
+        object : Text
+        price : Decimal
+        adress : Text
+        client : Party
+        carriers : [Party]
+        supplier : Party
+    where
+        signatory supplier
+
+Template Start_Shipping
+    with
+        object : Text
+        price : Decimal
+        adress : Text
+        client : Party
+        carrier : Party
+        supplier : Party
+    where
+        signatory supplier
+        observer carrier
+
+========================== choices =========================
+
+choice POAccept : ContractID Request_Carriers     (Depends on T001 Template PO)
+    controller supplier
+    do
+        create Request_Carriers with
+            object = object
+            price = price
+            address = address
+            client = client
+            supplier = supplier
+
+choice POReject : ()                       (Depends on T001 Template PO)                               
+    controller supplier
+        do 
+            pure()
+
+nonconsuming choice Ask_for_quotation : ContractID Quotation       (Depends on T002 Template Request_Carriers)
+    with
+        carrier : Party
+    controller supplier
+    do
+        create Quotation with
+            object = object
+            price = price
+            address = address
+            client = client
+            supplier = supplier
+            carrier = carrier
+
+choice Select_Carrier : ContractID Choose_Carrier       (Depends on T002 Template Request_Carriers)
+    with 
+        carriers : [Party]
+    controller supplier
+    do 
+        create Choose_Carrier with 
+            object = object
+            price = price
+            address = address
+            client = client
+            supplier = supplier
+            carriers = carriers
+
+choice Decide_Quote : ContractID Quote             (Depends on T003 Template Quotation)
+    with
+        fee : Decimal
+        time : RelTime
+    controller carrier
+    do
+        create Quote with
+            fee = fee
+            time = time
+
+choice Choose_Best : ContractID Start_Shipping   (Depends on T005 Template Choose_Carrier)
+    controller supplier
+    do
+        lookedValues <- mapA (\c -> lookupByKey @Quote (supplier, c)) carriers
+        let qs = catOptionals lookedValues
+        lookedEmpty <- mapA (\c -> lookupByKey @Quotation (supplier, c)) carriers
+        let sv = catOptionals lookedEmpty
+        values <- mapA (\id -> fetch id) qs
+
+        let ordered = (sortOn \(quotation) -> quotation.price) values
+        let quotation = head ordered
+
+        mapA (\id -> archive id) qs
+        mapA (\id -> archive id) sv
+
+        create Start_Shipping with 
+            object = object
+            price = price
+            address = address
+            fee = quotation.price
+            customer = customer
+            supplier = supplier
+            carrier = quotation.carrier
+
+
