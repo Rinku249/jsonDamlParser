@@ -1,0 +1,9 @@
+sdk-version: 2.1.1
+        name: project
+        source: daml
+        init-script: Main:setup
+        version: 0.0.1
+        dependencies:
+        - daml-prim
+        - daml-stdlib
+        - daml-script
