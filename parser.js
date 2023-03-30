@@ -1,9 +1,10 @@
 import { argv } from 'node:process';
 import fs from 'node:fs';
 import ejs from 'ejs';
+import { parse } from 'node:path';
 
 var template = fs.readFileSync('templates/template.ejs', 'utf-8');
-//var choice = fs.readFileSync('templates/choice.ejs', 'utf-8');
+var choice = fs.readFileSync('templates/choice.ejs', 'utf-8');
 
 
 ///////////////////////////////////// Create the JSON? ///////////////////////////////////////
@@ -31,6 +32,13 @@ for (let i = 0; i<Object.keys(json['templates']).length; i++)
 {
     let x = pad(i+1, 3);
     templates.push(ejs.render(template, { object: json['templates']['Template'+x] }) + "\n\n");
+}
+
+for (let i = 0; i<Object.keys(json['choices']).length; i++)
+{
+    let x = pad(i+1, 3);
+    let owner = json['choices']['choice'+x]["Dependency"].split("T")[1]
+    templates[parseInt(owner)-1] += ejs.render(choice, { object: json['choices']['choice'+x] }) + "\n\n";
 }
 
 console.log(templates);

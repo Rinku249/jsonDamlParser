@@ -7,3 +7,5 @@ template <%= object["id"] %>
     where
         signatory <%= object["Signatory"] %>
         <% if(object["Observer"]){ %>observer <%= object["Observer"] %><% } %>
+
+        <% if(object["Key"]){ %>maintainer key._1 <% } %>
