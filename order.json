@@ -108,6 +108,8 @@
                 "price":"Decimal",
                 "address":"Text",
                 "client":"Party",
+                "fee":"Decimal",
+                "time":"RelTime",
                 "carrier":"Party",
                 "supplier":"Party"
             },
@@ -177,8 +179,10 @@
             "controller":"supplier",
             "dependency":"T005",
             "consuming":true,
-            "keyGet":"T003",
-            "backupKey":"T004",
+            "over":"carriers",
+            "sortOn":"fee",
+            "keyGet":"T004",
+            "backupKey":"T003",
             "toCreate":"T006"
         }
     }

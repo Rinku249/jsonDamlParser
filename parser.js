@@ -5,7 +5,8 @@ import { parse } from 'node:path';
 
 var template = fs.readFileSync('templates/template.ejs', 'utf-8');
 var choice = fs.readFileSync('templates/choice.ejs', 'utf-8');
-let DAMLFileText = `module Main where\n\nimport DA.List\nimport DA.Optional\nimport Daml.Script\n\n`
+var RecursiveChoice = fs.readFileSync('templates/RChoice.ejs', 'utf-8');
+let DAMLFileText = `module Main where\n\nimport DA.List\nimport DA.Optional\nimport DA.Time\nimport Daml.Script\n\n`
 
 ///////////////////////////////////// Create the JSON? ///////////////////////////////////////
 
@@ -57,11 +58,19 @@ for (let i = 0; i<Object.keys(json['choices']).length; i++)
             }
         }
     }
-    if(withs.length == 0){console.log(withs)}
-    templates[parseInt(owner)-1] += ejs.render(choice, { object: json['choices']['choice'+x], extras: withs, params: paramsToUse}) + "\n\n";
+    if(json['choices']['choice'+x]["type"] == "RecursiveChoice")
+    {
+        console.log(withs);
+        console.log(paramsToUse);
+        templates[parseInt(owner)-1] += ejs.render(RecursiveChoice, { object: json['choices']['choice'+x], extras: withs, params: paramsToUse}) + "\n\n";
+    }
+    else
+    {
+        templates[parseInt(owner)-1] += ejs.render(choice, { object: json['choices']['choice'+x], extras: withs, params: paramsToUse}) + "\n\n";
+    }
 }
 
-console.log(templates);
+//console.log(templates);
 
 templates.forEach( x =>{
     DAMLFileText += x
@@ -97,14 +106,14 @@ fs.mkdir("daml_output/daml",{ recursive: true }, (err) => {
             else{
                 fs.writeFile("daml_output/daml/Step.daml", DAMLFileText, (err2) => {if (err2) throw (err2)})
                 fs.writeFile("daml_output/daml.yaml",`sdk-version: 2.1.1
-        name: project
-        source: daml
-        init-script: Main:setup
-        version: 0.0.1
-        dependencies:
-        - daml-prim
-        - daml-stdlib
-        - daml-script`, (err2) => {if (err2) throw (err2)})
+name: project
+source: daml
+init-script: Main:setup
+version: 0.0.1
+dependencies:
+- daml-prim
+- daml-stdlib
+- daml-script`, (err2) => {if (err2) throw (err2)})
             }
         })
 //exec('sed "s/\r/\n/g" daml_output/daml/Step.daml | sed "s/\t/    /g" > daml_output/daml/Main.daml')

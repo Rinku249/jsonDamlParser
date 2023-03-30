@@ -3,5 +3,4 @@
             do
                 <% if(object.toCreate) {%>create <%=object.toCreate%> with
                     <% params.forEach( x =>{ %><%= x %> = <%= x %>
-                    <% }) %>
-                    <%} else{%> return ()<%}%>
+                    <% }) %><%} else{%>return ()<%}%>

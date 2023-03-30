@@ -1,0 +1,18 @@
+        choice <%= object.name %> : ContractId <%= object.toCreate %>
+            controller <%= object.controller %>
+            do
+                lookedValues <- mapA (\c -> lookupByKey @<%= object.keyGet %> (<%= object.controller %>, c)) <%=object.over%>
+                let qs = catOptionals lookedValues
+                lookedEmpty <- mapA (\c -> lookupByKey @<%= object.backupKey %> (<%= object.controller %>, c)) <%=object.over%>
+                let sv = catOptionals lookedEmpty
+                values <- mapA (\id -> fetch id) qs
+
+                let ordered = (sortOn \(desiredReturn) -> desiredReturn.<%=object.sortOn%>) values 
+                let desiredReturn = head ordered
+
+                mapA (\id -> archive id) qs
+                mapA (\id -> archive id) sv
+
+                <% if(object.toCreate) {%>create <%=object.toCreate%> with
+                    <% params.forEach( x =>{ let hasIt = false %><%extras.forEach( y =>{ if(y.includes(x[0])){ hasIt = true%><%= x %> = desiredReturn.<%=x%><%}})%><% if(!hasIt){%><%= x %> = <%= x %><%}hasIt = false%>
+                    <% }) %><%} else{%>return ()<%}%>
