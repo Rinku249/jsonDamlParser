@@ -6,6 +6,7 @@ import { parse } from 'node:path';
 var template = fs.readFileSync('templates/template.ejs', 'utf-8');
 var choice = fs.readFileSync('templates/choice.ejs', 'utf-8');
 var RecursiveChoice = fs.readFileSync('templates/RChoice.ejs', 'utf-8');
+var LChoice = fs.readFileSync('templates/LoopChoice.ejs', 'utf-8');
 let DAMLFileText = `module Main where\n\nimport DA.List\nimport DA.Optional\nimport DA.Time\nimport Daml.Script\n\n`
 
 ///////////////////////////////////// Create the JSON? ///////////////////////////////////////
@@ -21,7 +22,7 @@ function pad(n, length) {
 
 
 
-const json = JSON.parse(fs.readFileSync("order.json"));
+const json = JSON.parse(fs.readFileSync("order2.json"));
 
 
 //console.log(json['templates'][0]);
@@ -60,9 +61,11 @@ for (let i = 0; i<Object.keys(json['choices']).length; i++)
     }
     if(json['choices']['choice'+x]["type"] == "RecursiveChoice")
     {
-        console.log(withs);
-        console.log(paramsToUse);
         templates[parseInt(owner)-1] += ejs.render(RecursiveChoice, { object: json['choices']['choice'+x], extras: withs, params: paramsToUse}) + "\n\n";
+    }
+    else if(json['choices']['choice'+x]["type"] == "LChoice")
+    {
+        templates[parseInt(owner)-1] += ejs.render(LChoice, { object: json['choices']['choice'+x], extras: withs, params: paramsToUse}) + "\n\n";
     }
     else
     {
