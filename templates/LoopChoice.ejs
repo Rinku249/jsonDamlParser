@@ -2,7 +2,4 @@
             controller <%= object.controller %>
             do
                 forA <%=object.list%> (\loopItem -> create <%=object.toCreate%> with
-                    <% params.forEach( x =>{ %><% if (x == object.son) {%><%= x %> = loopItem <%}else{%><%= x %> = <%= x %><%}%>
-                    <% }) %>
-                )
-
+                    <% params.forEach( (x,i,arr) =>{ %><% if (x == object.son) {%><%= x %> = loopItem <%}else{%><%= x %> = <%= x %><%}%><%if(i != arr.length -1){%><%= "\n\t\t\t\t\t" %><%}%><% }) %>)

@@ -83,24 +83,6 @@
         "template005":
         {
             "id":"T005",
-            "name":"Choose_Carrier",
-            "parameters":
-            {
-                "object":"Text",
-                "price":"Decimal",
-                "address":"Text",
-                "client":"Party",
-                "carriers":"[Party]",
-                "supplier":"Party"
-            },
-            "type":"Template",
-            "signatory":"supplier",
-            "observer":"",
-            "key":""
-        },
-        "template006":
-        {
-            "id":"T006",
             "name":"Start_Shipping",
             "parameters":
             {
@@ -117,6 +99,88 @@
             "signatory":"supplier",
             "observer":"carrier",
             "key":""
+        },
+        "template006":
+        {
+            "id":"T006",
+            "name":"Customer_Invoice",
+            "parameters":
+            {
+                "object":"Text",
+                "price":"Decimal",
+                "address":"Text",
+                "client":"Party",
+                "fee":"Decimal",
+                "time":"RelTime",
+                "carrier":"Party",
+                "invoice":"Text",
+                "supplier":"Party"
+            },
+            "type":"Template",
+            "signatory":"supplier",
+            "observer":"customer",
+            "key":""
+        },
+        "template007":
+        {
+            "id":"T007",
+            "name":"resend_invoce_customer",
+            "parameters":
+            {
+                "object":"Text",
+                "price":"Decimal",
+                "address":"Text",
+                "client":"Party",
+                "fee":"Decimal",
+                "time":"RelTime",
+                "carrier":"Party",
+                "supplier":"Party"
+            },
+            "type":"Template",
+            "signatory":"supplier",
+            "observer":"customer",
+            "key":"" 
+        },
+        "template008":
+        {
+            "id":"T008",
+            "name":"Customer_Invoice",
+            "parameters":
+            {
+                "object":"Text",
+                "price":"Decimal",
+                "address":"Text",
+                "client":"Party",
+                "fee":"Decimal",
+                "time":"RelTime",
+                "carrier":"Party",
+                "invoice":"Text",
+                "supplier":"Party"
+            },
+            "type":"Template",
+            "signatory":"carrier",
+            "observer":"supplier",
+            "key":""
+        },
+        "template009":
+        {
+            "id":"T009",
+            "name":"resend_invoce_supplier",
+            "parameters":
+            {
+                "object":"Text",
+                "price":"Decimal",
+                "address":"Text",
+                "client":"Party",
+                "fee":"Decimal",
+                "time":"RelTime",
+                "carrier":"Party",
+                "supplier":"Party"
+            },
+            "type":"Template",
+            "signatory":"supplier",
+            "observer":"carrier",
+            "key":"" 
         }
     },
     "choices":
@@ -153,16 +217,6 @@
             "consuming":false,
             "toCreate":"T003"
         },
-        "choice004":
-        {
-            "id":"C004",
-            "name":"Select_Carrier",
-            "type":"Choice",
-            "controller":"supplier",
-            "dependency":"T002",
-            "consuming":true,
-            "toCreate":"T005"
-        },
         "choice005":
         {
             "id":"C005",
@@ -176,16 +230,96 @@
         "choice006":
         {
             "id":"C006",
-            "name":"Choose_best",
+            "name":"Choose_best_carrier",
             "type":"RecursiveChoice",
             "controller":"supplier",
-            "dependency":"T005",
+            "dependency":"T002",
             "consuming":true,
             "over":"carriers",
             "sortOn":"fee",
             "keyGet":"T004",
             "backupKey":"T003",
+            "toCreate":"T005"
+        },
+        "choice007":
+        {
+            "id":"C007",
+            "name":"send_invoce_customer",
+            "type":"Choice",
+            "controller":"supplier",
+            "dependency":"T005",
+            "consuming":false,
             "toCreate":"T006"
-        }
+        },     
+        "choice008":
+        {
+            "id":"C008",
+            "name":"send_invoce_supplier",
+            "type":"Choice",
+            "controller":"carrier",
+            "dependency":"T005",
+            "consuming":false,
+            "toCreate":"T008"
+        },
+        "choice009":
+        {
+            "id":"C009",
+            "name":"Accept_invoice_cust",
+            "type":"Choice",
+            "controller":"customer",
+            "dependency":"T006",
+            "consuming":true,
+            "toCreate":""
+        },       
+        "choice010":
+        {
+            "id":"C010",
+            "name":"Reject_invoice_cust",
+            "type":"Choice",
+            "controller":"customer",
+            "dependency":"T006",
+            "consuming":true,
+            "toCreate":"T007"
+        },
+        "choice011":
+        {
+            "id":"C011",
+            "name":"resend_invoce_customer",
+            "type":"Choice",
+            "controller":"supplier",
+            "dependency":"T007",
+            "consuming":true,
+            "toCreate":"T006"
+        },        
+        "choice012":
+        {
+            "id":"C012",
+            "name":"Accept_invoice_supplier",
+            "type":"Choice",
+            "controller":"supplier",
+            "dependency":"T008",
+            "consuming":true,
+            "toCreate":""
+        },       
+        "choice013":
+        {
+            "id":"C013",
+            "name":"Reject_invoice_supplier",
+            "type":"Choice",
+            "controller":"supplier",
+            "dependency":"T008",
+            "consuming":true,
+            "toCreate":"T009"
+        },
+        "choice014":
+        {
+            "id":"C014",
+            "name":"resend_invoce_supplier",
+            "type":"Choice",
+            "controller":"carrier",
+            "dependency":"T009",
+            "consuming":true,
+            "toCreate":"T008"
+        }     
     }
 }

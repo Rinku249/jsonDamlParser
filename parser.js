@@ -14,13 +14,6 @@ let DAMLFileText = `module Main where\n\nimport DA.List\nimport DA.Optional\nimp
 
 
 ///////////////////////////////////// Process the JSON //////////////////////////////////////
-//Taken from https://stackoverflow.com/questions/24503470/how-to-convert-number-to-3-digit-places
-function pad(n, length) {
-    var len = length - (''+n).length;
-    return (len > 0 ? new Array(++len).join('0') : '') + n;
-  }
-
-
 
 const json = JSON.parse(fs.readFileSync("order2.json"));
 
@@ -32,25 +25,25 @@ let templates = [];
 
 for (let i = 0; i<Object.keys(json['templates']).length; i++)
 {
-    let x = pad(i+1, 3);
-    templates.push(ejs.render(template, { object: json['templates']['template'+x] }) +"\n");
+    let x = json['templates'][Object.keys(json["templates"])[i]]
+    templates.push([json["templates"][Object.keys(json["templates"])[i]]["id"], ejs.render(template, { object: x }) +"\n"]);
 }
 
 for (let i = 0; i<Object.keys(json['choices']).length; i++)
 {
-    let x = pad(i+1, 3);
+    let x = json['choices'][Object.keys(json["choices"])[i]]
+    let owner = x["dependency"];
+    let next = x["toCreate"];
 
-    let owner = json['choices']['choice'+x]["dependency"].split("T")[1];
-    let next = json['choices']['choice'+x]["toCreate"].split("T")[1];
+    let origParams = json["templates"][Object.keys(json['templates']).find(k => json['templates'][k].id === owner)]["parameters"];
 
-    let origParams = json['templates']['template'+owner]["parameters"];
     let withs = [];
     let paramsToUse = [];
 
 
     if(next)
     {
-        let nextParams = json['templates']['template'+next]["parameters"];
+        let nextParams = json["templates"][Object.keys(json['templates']).find(k => json['templates'][k].id === next)]["parameters"];
 
         for (const [key, value] of Object.entries(nextParams)){
             paramsToUse.push([key])
@@ -59,24 +52,24 @@ for (let i = 0; i<Object.keys(json['choices']).length; i++)
             }
         }
     }
-    if(json['choices']['choice'+x]["type"] == "RecursiveChoice")
+    if(x["type"] == "RecursiveChoice")
     {
-        templates[parseInt(owner)-1] += ejs.render(RecursiveChoice, { object: json['choices']['choice'+x], extras: withs, params: paramsToUse}) + "\n\n";
+        templates.find(x => x[0] === owner)[1] += ejs.render(RecursiveChoice, { object: x, extras: withs, params: paramsToUse}) + "\n\n";
     }
-    else if(json['choices']['choice'+x]["type"] == "LChoice")
+    else if(x["type"] == "LChoice")
     {
-        templates[parseInt(owner)-1] += ejs.render(LChoice, { object: json['choices']['choice'+x], extras: withs, params: paramsToUse}) + "\n\n";
+        templates.find(x => x[0] === owner)[1] += ejs.render(LChoice, { object: x, extras: withs, params: paramsToUse}) + "\n\n";
     }
     else
     {
-        templates[parseInt(owner)-1] += ejs.render(choice, { object: json['choices']['choice'+x], extras: withs, params: paramsToUse}) + "\n\n";
+        templates.find(x => x[0] === owner)[1] += ejs.render(choice, { object: x, extras: withs, params: paramsToUse}) + "\n\n";
     }
 }
 
 //console.log(templates);
 
 templates.forEach( x =>{
-    DAMLFileText += x
+    DAMLFileText += x[1]
 });
 
 
