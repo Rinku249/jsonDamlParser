@@ -5,31 +5,11 @@
         "template001":
         {
             "id":"T001",
-            "name":"PO",
+            "name":"Sale_Presentation",
             "parameters":
             {
                 "object":"Text",
-                "price":"Decimal",
-                "address":"Text",
-                "client":"Party",
-                "supplier":"Party"
-            },
-            "type":"Template",
-            "signatory":"client",
-            "observer":"supplier",
-            "key":""
-        },
-        "template002":
-        {
-            "id":"T002",
-            "name":"Request_Carriers",
-            "parameters":
-            {
-                "object":"Text",
-                "price":"Decimal",
-                "address":"Text",
-                "client":"Party",
-                "carriers":"[Party]",
+                "Initprice":"Decimal",
                 "supplier":"Party"
             },
             "type":"Template",
@@ -37,153 +17,38 @@
             "observer":"",
             "key":""
         },
+        "template002":
+        {
+            "id":"T002",
+            "name":"Auction",
+            "parameters":
+            {
+                "object":"Text",
+                "currentPrice":"Decimal",
+                "currentBidder":"Party",
+                "supplier":"Party"
+            },
+            "type":"Template",
+            "signatory":"supplier, currentBidder",
+            "observer":"",
+            "key":""
+        },
         "template003":
         {
             "id":"T003",
-            "name":"Quotation",
+            "name":"WinnerIOU",
             "parameters":
             {
                 "object":"Text",
-                "price":"Decimal",
-                "address":"Text",
-                "client":"Party",
-                "carrier":"Party",
+                "finalPrice":"Decimal",
+                "winner":"Party",
                 "supplier":"Party"
 
             },
             "type":"Template",
             "signatory":"supplier",
             "observer":"carrier",
-            "key":
-            {
-                "supplier":"Party",
-                "carrier":"Party"
-            }
-        },
-        "template004":
-        {
-            "id":"T004",
-            "name":"Quote",
-            "parameters":
-            {
-                "fee":"Decimal",
-                "time":"RelTime",
-                "carrier":"Party",
-                "supplier":"Party"
-            },
-            "type":"Template",
-            "signatory":"supplier",
-            "observer":"carrier",
-            "key":           
-            {
-                "supplier":"Party",
-                "carrier":"Party"
-            }
-        },
-        "template005":
-        {
-            "id":"T005",
-            "name":"Start_Shipping",
-            "parameters":
-            {
-                "object":"Text",
-                "price":"Decimal",
-                "address":"Text",
-                "client":"Party",
-                "fee":"Decimal",
-                "time":"RelTime",
-                "carrier":"Party",
-                "supplier":"Party"
-            },
-            "type":"Template",
-            "signatory":"supplier",
-            "observer":"carrier",
             "key":""
-        },
-        "template006":
-        {
-            "id":"T006",
-            "name":"Customer_Invoice",
-            "parameters":
-            {
-                "object":"Text",
-                "price":"Decimal",
-                "address":"Text",
-                "client":"Party",
-                "fee":"Decimal",
-                "time":"RelTime",
-                "carrier":"Party",
-                "invoice":"Text",
-                "supplier":"Party",
-                "customer":"Party"
-
-            },
-            "type":"Template",
-            "signatory":"supplier",
-            "observer":"customer",
-            "key":""
-        },
-        "template007":
-        {
-            "id":"T007",
-            "name":"resend_invoce_customer",
-            "parameters":
-            {
-                "object":"Text",
-                "price":"Decimal",
-                "address":"Text",
-                "client":"Party",
-                "fee":"Decimal",
-                "time":"RelTime",
-                "carrier":"Party",
-                "supplier":"Party",
-                "customer":"Party"
-            },
-            "type":"Template",
-            "signatory":"supplier",
-            "observer":"customer",
-            "key":"" 
-        },
-        "template008":
-        {
-            "id":"T008",
-            "name":"Supplier_Invoice",
-            "parameters":
-            {
-                "object":"Text",
-                "price":"Decimal",
-                "address":"Text",
-                "client":"Party",
-                "fee":"Decimal",
-                "time":"RelTime",
-                "carrier":"Party",
-                "invoice":"Text",
-                "supplier":"Party"
-            },
-            "type":"Template",
-            "signatory":"carrier",
-            "observer":"supplier",
-            "key":""
-        },
-        "template009":
-        {
-            "id":"T009",
-            "name":"resend_invoce_Supplier",
-            "parameters":
-            {
-                "object":"Text",
-                "price":"Decimal",
-                "address":"Text",
-                "client":"Party",
-                "fee":"Decimal",
-                "time":"RelTime",
-                "carrier":"Party",
-                "supplier":"Party"
-            },
-            "type":"Template",
-            "signatory":"supplier",
-            "observer":"carrier",
-            "key":"" 
         }
     },
     "choices":
@@ -191,7 +56,7 @@
         "choice001":
         {
             "id":"C001",
-            "name":"POAccept",
+            "name":"Publish",
             "type":"Choice",
             "controller":"supplier",
             "dependency":"T001",
@@ -201,7 +66,7 @@
         "choice002":
         {
             "id":"C002",
-            "name":"POReject",
+            "name":"Bid",
             "type":"Choice",
             "controller":"supplier",
             "dependency":"T001",

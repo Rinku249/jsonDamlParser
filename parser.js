@@ -20,6 +20,11 @@ const json = JSON.parse(fs.readFileSync("order2.json"));
 
 //console.log(json['templates'][0]);
 
+if(json['parameters']['public'])
+{
+    DAMLFileText += ""
+}
+
 
 let templates = [];
 
