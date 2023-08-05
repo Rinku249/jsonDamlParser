@@ -7,24 +7,91 @@ var template = fs.readFileSync('templates/template.ejs', 'utf-8');
 var choice = fs.readFileSync('templates/choice.ejs', 'utf-8');
 var RecursiveChoice = fs.readFileSync('templates/RChoice.ejs', 'utf-8');
 var LChoice = fs.readFileSync('templates/LoopChoice.ejs', 'utf-8');
-let DAMLFileText = `module Main where\n\nimport DA.List\nimport DA.Optional\nimport DA.Time\nimport Daml.Script\n\n`
+var IfChoice = fs.readFileSync('templates/IfChoice.ejs', 'utf-8');
+var ExerciseChoice = fs.readFileSync('templates/ExerciseChoice.ejs', 'utf-8');
+var nomnoml = fs.readFileSync('test.nomnoml', 'utf-8');
+let jsonFile = {
+    "name" : "",
+    "templates" : {},
+    "choices" : {},
+    "parameters" : 
+    {
+        "public" : false
+    }
+}
+let DAMLFileText = `module Main where\n\nimport DA.List\nimport DA.Optional\nimport DA.Time\nimport DA.Text as T\nimport DA.Foldable\nimport Daml.Script\n`
 
-///////////////////////////////////// Create the JSON? ///////////////////////////////////////
+
+///////////////////////////////////// Create the JSON from nomnoml ///////////////////////////////////////
+
+let elements = nomnoml.split("\n");
+jsonFile.name = elements[0]
+elements = elements.filter(x => x.includes("["));
+let flow = elements.pop();
+
+while(true){
+    let old = flow;
+    flow = flow.replace("] ", "]").replace(" [", "[")
+    let changed = flow;
+    if (old === changed){
+        break;
+    }
+}
+
+
+console.log(Object.keys(jsonFile.templates).length);
+
+//array = [type, name]
+
+elements.forEach(x => 
+{
+    let object = x.replaceAll(" ", "");
+    console.log(object)
+    let type = object.split("<")[1].split(">")[0];
+    let name = object.split(">")[1].split("|")[0];
+    if(type === "template")
+    {
+        let signatory = object.split("\u{270D}")[1].split(";")[0];
+        let observer = object.split("\u{1F50E}")[1].split(";")[0];
+        let number = Object.keys(jsonFile.templates).length+1;
+        let params = object.split("|")[1].split(";\u{270D}")[0].split(";\u{1F50E}")[0].split(";");
+        params = params.map(x => [x.split("(")[0], x.split("(")[1].split(")")[0]]);
+        let jsonParams = {}
+        for(let i = 0; i<params.length;i++){
+            jsonParams[params[i][0]] = params[i][1];
+        }
+        jsonFile.templates["template00" + number] = {};
+        jsonFile.templates["template00" + number].id = "T" + number;
+        jsonFile.templates["template00" + number].name = name;
+        jsonFile.templates["template00" + number].parameters = jsonParams;
+        jsonFile.templates["template00" + number].type = type;
+        jsonFile.templates["template00" + number].signatory = signatory;
+        jsonFile.templates["template00" + number].observer = observer;
+    }
+    else
+    {
+
+    }
+
+});
+
+console.log(jsonFile)
 
 
 
 ///////////////////////////////////// Process the JSON //////////////////////////////////////
+/*
+const json = JSON.parse(fs.readFileSync("AuctionOrder.json"));
 
-const json = JSON.parse(fs.readFileSync("order2.json"));
+if(json['parameters']['public']){
+    DAMLFileText += "import PublicSetup\n\n" 
+}
+else{
+    DAMLFileText += "\n"
+}
 
 
 //console.log(json['templates'][0]);
-
-if(json['parameters']['public'])
-{
-    DAMLFileText += ""
-}
-
 
 let templates = [];
 
@@ -65,6 +132,15 @@ for (let i = 0; i<Object.keys(json['choices']).length; i++)
     {
         templates.find(x => x[0] === owner)[1] += ejs.render(LChoice, { object: x, extras: withs, params: paramsToUse}) + "\n\n";
     }
+    else if(x["type"] == "IfChoice")
+    {
+        templates.find(x => x[0] === owner)[1] += ejs.render(IfChoice, { object: x, extras: withs, params: paramsToUse}) + "\n\n";
+    }
+    else if(x["type"] == "ExerciseChoice")
+    {
+        let name = json["choices"][Object.keys(json['choices']).find(k => json['choices'][k].id === x.choice)]["name"];
+        templates.find(x => x[0] === owner)[1] += ejs.render(ExerciseChoice, { object: x, extras: withs, params: paramsToUse, name: name}) + "\n\n";
+    }
     else
     {
         templates.find(x => x[0] === owner)[1] += ejs.render(choice, { object: x, extras: withs, params: paramsToUse}) + "\n\n";
@@ -77,8 +153,41 @@ templates.forEach( x =>{
     DAMLFileText += x[1]
 });
 
+if(json['parameters']['public'])
+{
+    DAMLFileText += `setup = script do
 
-DAMLFileText += `setup = script do
+    PublicSetup.setup
+
+
+    bobId <- validateUserId $ toUserId "bob"
+    bobUser <- getUser bobId
+    let Some bob = bobUser.primaryParty
+    
+    bobRights <- listUserRights bobId
+    let readAs = [p | CanReadAs p <- bobRights]
+    let bobPublic = head readAs
+
+    aliceId <- validateUserId $ toUserId "alice"
+    aliceUser <- getUser aliceId
+    let Some alice = aliceUser.primaryParty
+  
+    aliceRights <- listUserRights aliceId
+    let readAs = [p | CanReadAs p <- aliceRights]
+    let alicePublic = head readAs
+
+    paco <- allocatePartyWithHint "Paco" (PartyIdHint "paco")
+    luis <- allocatePartyWithHint "Luis" (PartyIdHint "luis")
+    pacoId <- validateUserId "paco"
+    luisId <- validateUserId "luis"
+    createUser (User pacoId (Some paco)) [CanActAs paco]
+    createUser (User luisId (Some luis)) [CanActAs luis]
+
+    pure ()`
+}
+else
+{
+    DAMLFileText += `setup = script do
 
     alice <- allocatePartyWithHint "Alice" (PartyIdHint "alice")
     hugo <- allocatePartyWithHint "Hugo" (PartyIdHint "hugo")
@@ -98,6 +207,9 @@ DAMLFileText += `setup = script do
     createUser (User luisId (Some luis)) [CanActAs luis]
 
     pure ()`
+}
+
+
 
 
 fs.mkdir("daml_output/daml",{ recursive: true }, (err) => {
@@ -115,6 +227,64 @@ dependencies:
 - daml-prim
 - daml-stdlib
 - daml-script`, (err2) => {if (err2) throw (err2)})
+                if (json['parameters']['public'])
+                {
+                    fs.writeFile("daml_output/daml/PublicSetup.daml",`module PublicSetup where
+
+import DA.Foldable (forA_)
+import DA.Optional (fromSomeNote)
+import qualified DA.Text as T
+import Daml.Script
+
+-- | A test user for the create-daml-app network.
+data TestUser = TestUser with
+  alias : Text
+  public : Party
+
+-- | Create a public party, then create three test users.
+setup : Script ()
+setup = do
+  public <- createPublic
+  let aliases = ["Alice", "Bob", "Charlie"]
+  forA_ aliases $ \\alias -> createTestUser $ TestUser alias public
+
+-- | Create a test user.
+createTestUser : TestUser -> Script Party
+createTestUser TestUser{alias, public} = do
+  u <- getOrCreateUser alias (Some public)
+  let p = getPrimaryParty u
+  pure p
+
+-- | Create the public party.
+createPublic : Script Party
+createPublic = do
+  publicUser <- getOrCreateUser "Public" None
+  pure $ getPrimaryParty publicUser
+
+
+-- | Get a user by their id. If the user doesn't exist, it is created.
+getOrCreateUser : Text -> Optional Party -> Script User
+getOrCreateUser alias publicM = do
+  userId <- validateUserId $ toUserId alias
+  try
+    getUser userId
+  catch
+    UserNotFound _ -> do
+      p <- allocateParty alias
+      let u = User userId (Some p)
+      createUser u $ CanActAs p :: [CanReadAs public | Some public <- [publicM]]
+      pure u
+
+-- | Convert a text to a valid user id.
+toUserId : Text -> Text
+toUserId = T.asciiToLower
+
+-- | Try to get the primary party of a user and fail if the user has no associated primary party.
+getPrimaryParty : User -> Party
+getPrimaryParty u = fromSomeNote ("User " <> userIdToText u.userId <> " is missing a primary party.") u.primaryParty`, (err2) => {if (err2) throw (err2)}) 
+                }
             }
         })
 //exec('sed "s/\r/\n/g" daml_output/daml/Step.daml | sed "s/\t/    /g" > daml_output/daml/Main.daml')
+
+*/

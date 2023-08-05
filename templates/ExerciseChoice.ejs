@@ -1,0 +1,12 @@
+        nonconsuming choice <%= object.name %> : <% if(object.toCreate) {%>ContractId <%=object.toCreate%><%} else{%>()<%}%>
+            with
+                <% Object.keys(object["parameters"]).forEach( (x,i,arr) =>{ %><%= x %> : <%= object["parameters"][x] %><%if(arr.length != i+1) { %><%= "\n\t\t\t\t" %><%}%><% }) %>
+            controller <%=object.controller%>
+            do
+                exercise self <%= name %> with
+                    <% Object.keys(object.parameters).forEach( x =>{ %><%= x %> = <%= x %>
+                    <% }) %>
+
+                <% if(object.toCreate) {%>create <%=object.toCreate%> with
+                    <% params.forEach( x =>{ %><%= x %> = <%= x %>
+                    <% }) %><%} else{%>return ()<%}%>

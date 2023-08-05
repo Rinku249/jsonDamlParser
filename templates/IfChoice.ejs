@@ -1,0 +1,13 @@
+        postconsuming choice <%= object.name %> : <% if(object.toCreate) {%>ContractId <%=object.toCreate%><%} else{%>()<%}%>
+            with
+                <% Object.keys(object["parameters"]).forEach( (x,i,arr) =>{ %><%= x %> : <%= object["parameters"][x] %><%if(arr.length != i+1) { %><%= "\n\t\t\t\t" %><%}%><% }) %>
+            controller <%=object.controller%>
+            do
+                if <%=Object.keys(object["compare"])[0] %> <%= Object.ifType %> <%= object["compare"][Object.keys(object["compare"])[0]] %> then
+                    <% if(object.toCreate) {%>create <%=object.toCreate%> with
+                        <% params.forEach( x =>{%><%if (Object.keys(object.replace).includes(String(x))){ %><%= x %> = <%=object["replace"][String(x)]%> <% }else{ %><%= x %> = <%= x %><%}%>
+                        <% }) %><%} else{%>return ()<%}%>
+                else
+                    <% if(object.toCreate) {%>create <%=object.toCreate%> with
+                        <% params.forEach( x =>{ %><%= x %> = <%= x %>
+                        <% }) %><%} else{%>return ()<%}%>

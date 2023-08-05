@@ -1,0 +1,15 @@
+TEST
+#.template: title=bold
+#.choice: visual=roundrect title=bold
+#.ncchoice: visual=roundrect title=bold dashed
+#.cchoice: visual=frame body=center
+#direction:down 
+
+
+[<template> A | param1(decimal);🔎 Party1;✍️ Party2;]
+[<template> B | param1(decimal);🔎 Party2;✍️ Party1;]
+[<choice> choice1 | 👉 party1]
+
+[A] -> [choice1] -> [B]
+
+

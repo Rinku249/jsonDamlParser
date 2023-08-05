@@ -9,7 +9,6 @@
             "parameters":
             {
                 "object":"Text",
-                "Initprice":"Decimal",
                 "supplier":"Party"
             },
             "type":"Template",
@@ -26,16 +25,36 @@
                 "object":"Text",
                 "currentPrice":"Decimal",
                 "currentBidder":"Party",
-                "supplier":"Party"
+                "supplier":"Party",
+                "public":"Party"
             },
             "type":"Template",
-            "signatory":"supplier, currentBidder",
-            "observer":"",
+            "signatory":"supplier",
+            "observer":"public",
             "key":""
         },
         "template003":
         {
             "id":"T003",
+            "name":"bid",
+            "parameters":
+            {
+                "bidder":"Party",
+                "bid":"Decimal",
+                "supplier":"Party"
+            },
+            "type":"Template",
+            "signatory":"supplier",
+            "observer":"bidder",
+            "key":           
+            {
+                "supplier":"Party",
+                "bidder":"Party"
+            }
+        },
+        "template004":
+        {
+            "id":"T004",
             "name":"WinnerIOU",
             "parameters":
             {
@@ -47,7 +66,7 @@
             },
             "type":"Template",
             "signatory":"supplier",
-            "observer":"carrier",
+            "observer":"winner",
             "key":""
         }
     },
@@ -67,131 +86,56 @@
         {
             "id":"C002",
             "name":"Bid",
-            "type":"Choice",
-            "controller":"supplier",
-            "dependency":"T001",
-            "consuming":true,
-            "toCreate":""
+            "type":"ExerciseChoice",
+            "controller":"bidder",
+            "dependency":"T002",
+            "consuming":false,
+            "toCreate":"T003",
+            "choice":"C003",
+            "parameters":
+            {
+                "bid":"Decimal",
+                "bidder":"Party"
+            }
         },
         "choice003":
         {
             "id":"C003",
-            "name":"Ask_for_quotation",
-            "type":"LChoice",
-            "list":"carriers",
-            "son":"carrier",
+            "name":"UpdateBidder",
+            "type":"IfChoice",
+            "controller":"bidder",
+            "dependency":"T002",
+            "consuming":true,
+            "toCreate":"T002",
+            "parameters":
+            {
+                "bid":"Decimal",
+                "bidder":"Party"
+            },
+            "compare":
+            {
+                "bid":"currentPrice"
+            },
+            "replace":
+            {
+                "currentPrice":"bid",
+                "currentBidder":"bidder"
+            },
+            "ifType":">"
+        },
+        "choice004":
+        {
+            "id":"C004",
+            "name":"End_auction",
+            "type":"Choice",
             "controller":"supplier",
             "dependency":"T002",
-            "consuming":false,
-            "toCreate":"T003"
-        },
-        "choice005":
-        {
-            "id":"C005",
-            "name":"Decide_Quote",
-            "type":"Choice",
-            "controller":"carrier",
-            "dependency":"T003",
             "consuming":true,
             "toCreate":"T004"
-        },        
-        "choice006":
-        {
-            "id":"C006",
-            "name":"Choose_best_carrier",
-            "type":"RecursiveChoice",
-            "controller":"supplier",
-            "dependency":"T002",
-            "consuming":true,
-            "over":"carriers",
-            "sortOn":"fee",
-            "keyGet":"T004",
-            "backupKey":"T003",
-            "toCreate":"T005"
-        },
-        "choice007":
-        {
-            "id":"C007",
-            "name":"Send_invoce_customer",
-            "type":"Choice",
-            "controller":"supplier",
-            "dependency":"T005",
-            "consuming":false,
-            "toCreate":"T006"
-        },     
-        "choice008":
-        {
-            "id":"C008",
-            "name":"Send_invoce_supplier",
-            "type":"Choice",
-            "controller":"carrier",
-            "dependency":"T005",
-            "consuming":false,
-            "toCreate":"T008"
-        },
-        "choice009":
-        {
-            "id":"C009",
-            "name":"Accept_invoice_cust",
-            "type":"Choice",
-            "controller":"customer",
-            "dependency":"T006",
-            "consuming":true,
-            "toCreate":""
-        },       
-        "choice010":
-        {
-            "id":"C010",
-            "name":"Reject_invoice_cust",
-            "type":"Choice",
-            "controller":"customer",
-            "dependency":"T006",
-            "consuming":true,
-            "toCreate":"T007"
-        },
-        "choice011":
-        {
-            "id":"C011",
-            "name":"Resend_invoce_customer",
-            "type":"Choice",
-            "controller":"supplier",
-            "dependency":"T007",
-            "consuming":true,
-            "toCreate":"T006"
-        },        
-        "choice012":
-        {
-            "id":"C012",
-            "name":"Accept_invoice_supplier",
-            "type":"Choice",
-            "controller":"supplier",
-            "dependency":"T008",
-            "consuming":true,
-            "toCreate":""
-        },       
-        "choice013":
-        {
-            "id":"C013",
-            "name":"Reject_invoice_supplier",
-            "type":"Choice",
-            "controller":"supplier",
-            "dependency":"T008",
-            "consuming":true,
-            "toCreate":"T009"
-        },
-        "choice014":
-        {
-            "id":"C014",
-            "name":"Resend_invoce_supplier",
-            "type":"Choice",
-            "controller":"carrier",
-            "dependency":"T009",
-            "consuming":true,
-            "toCreate":"T008"
-        }     
+        }  
     },
     "parameters":
     {
-        "public":false
+        "public":true
     }
 }
