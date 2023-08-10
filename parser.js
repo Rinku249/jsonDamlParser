@@ -24,10 +24,26 @@ let DAMLFileText = `module Main where\n\nimport DA.List\nimport DA.Optional\nimp
 
 ///////////////////////////////////// Create the JSON from nomnoml ///////////////////////////////////////
 
-let elements = nomnoml.split("\n");
+function isAlphaNumeric(str) {
+    var code, i, len;
+    code = str.charCodeAt(i);
+    if (!(code > 47 && code < 58) && // numeric (0-9)
+        !(code > 64 && code < 91) && // upper alpha (A-Z)
+        !(code > 96 && code < 123)) { // lower alpha (a-z)
+    return false;
+    }
+    return true;
+  };
+
+
+
+let elements = nomnoml.replace(/ /g,"").split("\n");
 jsonFile.name = elements[0]
 elements = elements.filter(x => x.includes("["));
-let flow = elements.pop();
+let flowElements = elements.filter(x => !x.includes("[<"));
+for(let i = 0; i < flowElements.length; i++){elements.pop()}
+let flow = ""
+flowElements.forEach(x => flow+=x)
 
 while(true){
     let old = flow;
@@ -38,15 +54,9 @@ while(true){
     }
 }
 
-
-console.log(Object.keys(jsonFile.templates).length);
-
-//array = [type, name]
-
 elements.forEach(x => 
 {
-    let object = x.replaceAll(" ", "");
-    console.log(object)
+    let object = x;
     let type = object.split("<")[1].split(">")[0];
     let name = object.split(">")[1].split("|")[0];
     if(type === "template")
@@ -70,7 +80,54 @@ elements.forEach(x =>
     }
     else
     {
-
+        let controller = object.split("\u{1F449}")[1].split(";")[0];
+        let dependency = flow.split("]->["+name)[0].split("[");
+        dependency = dependency[dependency.length-1];
+        let toCreate = flow.split(name+"]");
+        let jsonCreates = []
+        for(let i = 1; i<toCreate.length;i++){
+            x = toCreate[i].split("]")[0].split("[")[1]
+            if (elements.find(y => y.includes(x+"|"))) jsonCreates.push(x)       
+        }
+        let number = Object.keys(jsonFile.choices).length+1;
+        let consuming = !(type === "ncchoice")
+        jsonFile.choices["choice00" + number] = {};
+        jsonFile.choices["choice00" + number].id = "C" + number;
+        jsonFile.choices["choice00" + number].name = name
+        jsonFile.choices["choice00" + number].type = type
+        jsonFile.choices["choice00" + number].controller = controller;
+        jsonFile.choices["choice00" + number].dependency = dependency;
+        jsonFile.choices["choice00" + number].consuming = consuming;
+        jsonFile.choices["choice00" + number].toCreate = jsonCreates;
+        if(type === "cchoice")
+        {
+            let parameter = object.split("|")[2].split("<")[0].split(">")[0];
+            let condition = ""
+            let text = object.split(parameter)[1];
+            isAlphaNumeric(text[1])? condition = text[0] : condition = text[0] + text[1]
+            let compare = object.split(condition);
+            compare = compare[compare.length-1].split(";")[0];
+            let def = flow.split(name+"]+->[")[1].split("]")[0];
+            jsonCreates.splice(jsonCreates.indexOf(def),1);
+            jsonFile.choices["choice00" + number].parameter = parameter;
+            jsonFile.choices["choice00" + number].ifType = condition;
+            jsonFile.choices["choice00" + number].compare = compare;
+            jsonFile.choices["choice00" + number].default = def;
+            jsonFile.choices["choice00" + number].toCreate = jsonCreates;
+        }
+        else if(type === "EChoice")
+        {
+            let params = object.split("|")[1].split(";\u{1F449}")[0].split(";");
+            let jsonParams = {};
+            for(let i = 0; i<params.length;i++){
+                jsonParams[params[i][0]] = params[i][1];
+            }
+            let choice = toCreate.filter(x => !jsonCreates.includes(x))[0];
+            let jsonCreates = toCreate.filter(x => !jsonCreates.includes(x))[0];
+            jsonFile.choices["choice00" + number].parameters = params;
+            jsonFile.choices["choice00" + number].choice = choice;
+            jsonFile.choices["choice00" + number].toCreate = jsonCreates;
+        }
     }
 
 });
