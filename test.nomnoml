@@ -9,6 +9,6 @@ TEST
 [<template>A|param1(decimal);🔎 Party1;✍️ Party2;]
 [<template> B | param1(decimal);🔎 Party1;✍️ Party1;]
 [<template> C | param1(decimal); param2(decimal);🔎 Party1;✍️ Party2;]
-[<cchoice> choice1 | 👉 party1 | param1 > 10;]
+[<cchoice> choice1 | param1 > 10 | 👉 party1;]
 [A]->[choice1] -> [B]
 [choice1] +-> [C]

@@ -1,0 +1,7 @@
+        <% if(!object.consuming) {%>nonconsuming <%}%>choice <%= object.name %> : <% if(object.toCreate) {%>ContractId <%=object.toCreate%><%} else{%>()<%}%>
+            <%if(extras.length != 0){%>with<%="\n\t\t\t\t"%><% extras.forEach( (x,i,arr) =>{ %><% x.forEach( (y,j,arr2) => { %><%= x[i][0] %> : <%= x[i][1] %><%if(arr2.length == j+1){%><%="\n\t\t\t"%><% } else { %><%="\n\t\t\t\t"%><% }})})} %>controller <%= object.controller %>
+            do
+                <%object.toCreate.forEach( (x, i, arr) =>{%>create <%=x%> with
+                    <% params[i].forEach( y =>{ %><%= y %> = <%= y %>
+                <% }) %><% }) %>
+                

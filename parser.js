@@ -5,6 +5,7 @@ import { parse } from 'node:path';
 
 var template = fs.readFileSync('templates/template.ejs', 'utf-8');
 var choice = fs.readFileSync('templates/choice.ejs', 'utf-8');
+var parallel = fs.readFileSync('templates/parallel.ejs', 'utf-8');
 var RecursiveChoice = fs.readFileSync('templates/RChoice.ejs', 'utf-8');
 var LChoice = fs.readFileSync('templates/LoopChoice.ejs', 'utf-8');
 var IfChoice = fs.readFileSync('templates/IfChoice.ejs', 'utf-8');
@@ -25,15 +26,18 @@ let DAMLFileText = `module Main where\n\nimport DA.List\nimport DA.Optional\nimp
 ///////////////////////////////////// Create the JSON from nomnoml ///////////////////////////////////////
 
 function isAlphaNumeric(str) {
-    var code, i, len;
-    code = str.charCodeAt(i);
+    var code;
+    code = str.charCodeAt(0);
     if (!(code > 47 && code < 58) && // numeric (0-9)
         !(code > 64 && code < 91) && // upper alpha (A-Z)
         !(code > 96 && code < 123)) { // lower alpha (a-z)
     return false;
     }
     return true;
-  };
+};
+let lpad = function(s, width, char) {
+    return (s.length >= width) ? s : (new Array(width).join(char) + s).slice(-width);
+}
 
 
 
@@ -71,7 +75,7 @@ elements.forEach(x =>
             jsonParams[params[i][0]] = params[i][1];
         }
         jsonFile.templates["template00" + number] = {};
-        jsonFile.templates["template00" + number].id = "T" + number;
+        jsonFile.templates["template00" + number].id = "T" + lpad(number, 3, 0);
         jsonFile.templates["template00" + number].name = name;
         jsonFile.templates["template00" + number].parameters = jsonParams;
         jsonFile.templates["template00" + number].type = type;
@@ -83,16 +87,23 @@ elements.forEach(x =>
         let controller = object.split("\u{1F449}")[1].split(";")[0];
         let dependency = flow.split("]->["+name)[0].split("[");
         dependency = dependency[dependency.length-1];
+        dependency = jsonFile["templates"][Object.keys(jsonFile['templates']).find(k => jsonFile['templates'][k].name === dependency)]["id"];
         let toCreate = flow.split(name+"]");
         let jsonCreates = []
         for(let i = 1; i<toCreate.length;i++){
             x = toCreate[i].split("]")[0].split("[")[1]
-            if (elements.find(y => y.includes(x+"|"))) jsonCreates.push(x)       
+            if (elements.find(y => y.includes(x+"|"))) {
+                x = jsonFile["templates"][Object.keys(jsonFile['templates']).find(k => jsonFile['templates'][k].name === x)]["id"];
+                jsonCreates.push(x)
+            }   
+        }
+        if (jsonCreates.length === 1){
+            jsonCreates = jsonCreates[0]
         }
         let number = Object.keys(jsonFile.choices).length+1;
         let consuming = !(type === "ncchoice")
         jsonFile.choices["choice00" + number] = {};
-        jsonFile.choices["choice00" + number].id = "C" + number;
+        jsonFile.choices["choice00" + number].id = "C" + lpad(number, 3, 0);
         jsonFile.choices["choice00" + number].name = name
         jsonFile.choices["choice00" + number].type = type
         jsonFile.choices["choice00" + number].controller = controller;
@@ -101,13 +112,14 @@ elements.forEach(x =>
         jsonFile.choices["choice00" + number].toCreate = jsonCreates;
         if(type === "cchoice")
         {
-            let parameter = object.split("|")[2].split("<")[0].split(">")[0];
+            let parameter = object.split("|")[1].split("<")[0].split(">")[0];
             let condition = ""
             let text = object.split(parameter)[1];
             isAlphaNumeric(text[1])? condition = text[0] : condition = text[0] + text[1]
             let compare = object.split(condition);
-            compare = compare[compare.length-1].split(";")[0];
+            compare = compare[compare.length-1].split("|")[0];
             let def = flow.split(name+"]+->[")[1].split("]")[0];
+            def = jsonFile["templates"][Object.keys(jsonFile['templates']).find(k => jsonFile['templates'][k].name === def)]["id"];
             jsonCreates.splice(jsonCreates.indexOf(def),1);
             jsonFile.choices["choice00" + number].parameter = parameter;
             jsonFile.choices["choice00" + number].ifType = condition;
@@ -117,7 +129,7 @@ elements.forEach(x =>
         }
         else if(type === "EChoice")
         {
-            let params = object.split("|")[1].split(";\u{1F449}")[0].split(";");
+            let params = object.split("|")[1].split("|\u{1F449}")[0].split(";");
             let jsonParams = {};
             for(let i = 0; i<params.length;i++){
                 jsonParams[params[i][0]] = params[i][1];
@@ -137,8 +149,8 @@ console.log(jsonFile)
 
 
 ///////////////////////////////////// Process the JSON //////////////////////////////////////
-/*
-const json = JSON.parse(fs.readFileSync("AuctionOrder.json"));
+
+const json = jsonFile;
 
 if(json['parameters']['public']){
     DAMLFileText += "import PublicSetup\n\n" 
@@ -164,6 +176,7 @@ for (let i = 0; i<Object.keys(json['choices']).length; i++)
     let owner = x["dependency"];
     let next = x["toCreate"];
 
+    
     let origParams = json["templates"][Object.keys(json['templates']).find(k => json['templates'][k].id === owner)]["parameters"];
 
     let withs = [];
@@ -172,16 +185,40 @@ for (let i = 0; i<Object.keys(json['choices']).length; i++)
 
     if(next)
     {
-        let nextParams = json["templates"][Object.keys(json['templates']).find(k => json['templates'][k].id === next)]["parameters"];
+        if(next.length > 1)
+        {
+            for (let i =0; i<next.length; i++)
+            {
+                let nextParams = json["templates"][Object.keys(json['templates']).find(k => json['templates'][k].id === next[i])]["parameters"];
 
-        for (const [key, value] of Object.entries(nextParams)){
-            paramsToUse.push([key])
-            if(!origParams.hasOwnProperty(key)){
-                withs.push([key,value]);
+                for (const [key, value] of Object.entries(nextParams)){
+                    paramsToUse.push([]);
+                    paramsToUse[i].push([key]);
+                    if(!origParams.hasOwnProperty(key)){
+                        withs.push([]);
+                        withs[i].push([key,value]);
+                    }
+                }
+            }
+        }
+        else
+        {
+            let nextParams = json["templates"][Object.keys(json['templates']).find(k => json['templates'][k].id === next[0])]["parameters"];
+            x["toCreate"] = x["toCreate"][0]
+
+            for (const [key, value] of Object.entries(nextParams)){
+                paramsToUse.push([key])
+                if(!origParams.hasOwnProperty(key)){
+                    withs.push([key,value]);
+                }
             }
         }
     }
-    if(x["type"] == "RecursiveChoice")
+    if(x["toCreate"][0].length > 1)
+    {
+        templates.find(x => x[0] === owner)[1] += ejs.render(parallel, {object: x, extras: withs, params: paramsToUse})
+    }
+    else if(x["type"] == "RecursiveChoice")
     {
         templates.find(x => x[0] === owner)[1] += ejs.render(RecursiveChoice, { object: x, extras: withs, params: paramsToUse}) + "\n\n";
     }
@@ -344,4 +381,3 @@ getPrimaryParty u = fromSomeNote ("User " <> userIdToText u.userId <> " is missi
         })
 //exec('sed "s/\r/\n/g" daml_output/daml/Step.daml | sed "s/\t/    /g" > daml_output/daml/Main.daml')
 
-*/
